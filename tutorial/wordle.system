@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-    <!-- Define your system here -->
+    <!-- A page sized region for accessing the PL011 UART device -->
+    <memory_region name="uart" size="0x1000" phys_addr="0x9000000" />
+
+    <protection_domain name="serial_server" priority="254">
+        <program_image path="serial_server.elf" />
+
+        <!-- Microkit places the code of a PD starting at 0x200000 in it’s
+        virtual address space. This means that the address to place the mapping
+        for the UART should be below this, or significantly higher to avoid
+        overlapping (e.g. 0x4000000) with the code of the PD. -->
+        <map mr="uart" vaddr="0x4000000" perms="rw" cached="false"
+            setvar_vaddr="uart_base_vaddr" />
+
+        <!-- Specify interrupt for serial input -->
+        <irq id="0" irq="33" />
+
+    </protection_domain>
 </system>
