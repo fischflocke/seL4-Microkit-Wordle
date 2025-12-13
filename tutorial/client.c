@@ -12,6 +12,12 @@
 
 #define INVALID_CHAR (-1)
 
+#define SERIAL_SERVER_CHANNEL_ID 2
+
+// Addresses of user input and output buffer
+uintptr_t user_input_vaddr;
+uintptr_t output_vaddr;
+
 struct wordle_char {
     int ch;
     enum character_state state;
@@ -32,7 +38,8 @@ void wordle_server_send() {
 }
 
 void serial_send(char *str) {
-    // Implement this function to get the serial server to print the string.
+    sprintf((char*)output_vaddr, "%s\0", str);
+    microkit_notify(SERIAL_SERVER_CHANNEL_ID);
 }
 
 // This function prints a CLI Wordle using pretty colours for what characters
@@ -124,4 +131,18 @@ void init(void) {
     print_table(false);
 }
 
-void notified(microkit_channel channel) {}
+void notified(microkit_channel channel) {
+    switch (channel) {
+        // Serial input (Notification from serial server)
+        case SERIAL_SERVER_CHANNEL_ID: {
+            char c = ((char*)user_input_vaddr)[0];
+            add_char_to_table(c);
+            print_table(true);
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+}

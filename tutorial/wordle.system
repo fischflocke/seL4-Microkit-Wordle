@@ -3,6 +3,11 @@
     <!-- A page sized region for accessing the PL011 UART device -->
     <memory_region name="uart" size="0x1000" phys_addr="0x9000000" />
 
+    <!-- Shared buffers between serial server and wordle client -->
+    <memory_region name="user_input" size="0x1000" />
+    <memory_region name="output" size="0x1000" />
+
+    <!--  PD for the serial sever -->
     <protection_domain name="serial_server" priority="254">
         <program_image path="serial_server.elf" />
 
@@ -16,5 +21,26 @@
         <!-- Specify interrupt for serial input -->
         <irq id="0" irq="33" />
 
+        <map mr="user_input" vaddr="0x4001000" perms="rw"
+            setvar_vaddr="user_input_vaddr" />
+        <map mr="output" vaddr="0x4002000" perms="r"
+            setvar_vaddr="output_vaddr" />
+
     </protection_domain>
+
+    <!-- PD for the wordle client -->
+    <protection_domain name="wordle_client" priority="0">
+        <program_image path="client.elf" />
+
+        <map mr="user_input" vaddr="0x4001000" perms="r"
+            setvar_vaddr="user_input_vaddr" />
+        <map mr="output" vaddr="0x4002000" perms="rw"
+            setvar_vaddr="output_vaddr" />
+    </protection_domain>
+
+    <!-- Communication channel between serial server and wordle client -->
+    <channel>
+        <end pd="serial_server" id="1" />
+        <end pd="wordle_client" id="2" />
+    </channel>
 </system>

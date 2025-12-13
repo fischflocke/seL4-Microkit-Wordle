@@ -5,6 +5,10 @@
 // This variable will have the address of the UART device
 uintptr_t uart_base_vaddr;
 
+// Addresses of user input and output buffer
+uintptr_t user_input_vaddr;
+uintptr_t output_vaddr;
+
 #define RHR_MASK 0b111111111
 #define UARTDR 0x000
 #define UARTFR 0x018
@@ -14,6 +18,8 @@ uintptr_t uart_base_vaddr;
 #define PL011_UARTFR_RXFE (1 << 4)
 
 #define REG_PTR(base, offset) ((volatile uint32_t *)((base) + (offset)))
+
+#define WORDLE_CLIENT_CHANNEL_ID 1
 
 void uart_init() {
     *REG_PTR(uart_base_vaddr, UARTIMSC) = 0x50;
@@ -74,14 +80,23 @@ void notified(microkit_channel channel) {
     switch (channel) {
         // Serial input
         case 0: {
-            // Get and print the character that has been entered
+            // Get the character that has been entered
             int c = uart_get_char();
-            uart_put_char(c);
 
             // Handle and acknowledge IRQ
             uart_handle_irq();
             microkit_irq_ack(channel);
+            
+            // Store the character in the shared buffer and notify client
+            sprintf((char*)user_input_vaddr, "%c", c);
+            microkit_notify(WORDLE_CLIENT_CHANNEL_ID);
 
+            break;
+        }
+
+        // Output from wordle client
+        case WORDLE_CLIENT_CHANNEL_ID: {
+            uart_put_str((char*)output_vaddr);
             break;
         }
 
