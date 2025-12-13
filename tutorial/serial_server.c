@@ -70,4 +70,23 @@ void init(void) {
     uart_put_str("SERIAL SERVER: starting\n");
 }
 
-void notified(microkit_channel channel) {}
+void notified(microkit_channel channel) {
+    switch (channel) {
+        // Serial input
+        case 0: {
+            // Get and print the character that has been entered
+            int c = uart_get_char();
+            uart_put_char(c);
+
+            // Handle and acknowledge IRQ
+            uart_handle_irq();
+            microkit_irq_ack(channel);
+
+            break;
+        }
+
+        default: {
+            break;
+        }
+    }
+}
