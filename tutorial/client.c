@@ -13,6 +13,7 @@
 #define INVALID_CHAR (-1)
 
 #define SERIAL_SERVER_CHANNEL_ID 2
+#define WORDLE_SERVER_CHANNEL_ID 3
 
 // Addresses of user input and output buffer
 uintptr_t user_input_vaddr;
@@ -31,10 +32,21 @@ static int curr_row = 0;
 static int curr_letter = 0;
 
 void wordle_server_send() {
-    // Implement this function to send the word over PPC
-    // After doing the PPC, the Wordle server should have updated
-    // the message-registers containing the state of each character.
-    // Look at the message registers and update the `table` accordingly.
+    // Create new message
+    microkit_msginfo msg = microkit_msginfo_new(0, 5);
+
+    // Load current guess to message registers
+    for (uint8_t i = 0; i < WORD_LENGTH; i++) {
+        microkit_mr_set(i, table[curr_row][i].ch);
+    }
+
+    // Call server
+    msg = microkit_ppcall(WORDLE_SERVER_CHANNEL_ID, msg);
+
+    // Update letter states
+    for (uint8_t i = 0; i < WORD_LENGTH; i++) {
+        table[curr_row][i].state = microkit_mr_get(i);
+    }
 }
 
 void serial_send(char *str) {

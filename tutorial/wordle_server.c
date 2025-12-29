@@ -36,3 +36,11 @@ void init(void) {
 }
 
 void notified(microkit_channel channel) {}
+
+microkit_msginfo protected(microkit_channel ch, microkit_msginfo msginfo) {
+    for (uint8_t i = 0; i < WORD_LENGTH; i++) {
+        microkit_mr_set(i, char_to_state(microkit_mr_get(i), word, i));
+    }
+
+    return msginfo;
+}

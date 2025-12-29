@@ -43,4 +43,15 @@
         <end pd="serial_server" id="1" />
         <end pd="wordle_client" id="2" />
     </channel>
+
+    <!-- PD for the wordle server -->
+    <protection_domain name="wordle_server" priority="254">
+        <program_image path="wordle_server.elf" />
+    </protection_domain>
+
+    <!-- Communication channel between wordle server and wordle client -->
+    <channel>
+        <end pd="wordle_server" id="1" />
+        <end pd="wordle_client" id="3" pp="true" />
+    </channel>
 </system>
